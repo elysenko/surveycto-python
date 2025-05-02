@@ -13,7 +13,10 @@ import requests
 import datetime
 import warnings
 from urllib.parse import quote
-
+import pandas as pd
+import tempfile
+import os
+import requests
 
 class IllegalArgumentError(ValueError):
     """
@@ -724,3 +727,70 @@ class SurveyCTOObject(object):
             raise e
         
         return response.json()['forms']
+
+    def upload_dataset(self, data, dataset_id, dataset_title=None, append=False, fill=False):
+        """
+        Uploads a pandas df to a dataset
+        :return: dictionary with previous dataset preview and upload response
+
+        :param data: pandas DataFrame to upload
+        :param dataset_id: ID of the dataset on SurveyCTO
+        :param dataset_title: Optional title for the dataset (defaults to dataset_id)
+        :param append: If True, appends data; otherwise replaces the dataset
+        :param fill: If True, allows mismatched columns in append mode
+        
+        """
+        
+        assert isinstance(data, pd.DataFrame), "data must be a pandas DataFrame"
+        assert isinstance(dataset_id, str), "dataset_id must be a string"
+        if dataset_title is None:
+            dataset_title = dataset_id
+    
+        headers = self.__auth()
+    
+        try:
+            check_resp = self.get_server_dataset(dataset_id)
+        except requests.exceptions.RequestException as e:
+            raise RuntimeError(f"Failed to retrieve dataset: {e}")
+    
+        dataset_upload_mode = 'append' if append else 'clear'
+        dataset_exists = 1
+        dataset_type = 'SERVER'
+    
+        with tempfile.NamedTemporaryFile(suffix=".csv", delete=False, mode='w', newline='') as tmp:
+            data.to_csv(tmp.name, index=False)
+            tmp_path = tmp.name
+    
+        upload_url = (
+            f"https://{self.server_name}.surveycto.com/"
+            f"datasets/{dataset_id}/upload?csrf_token={headers["X-csrf-token"]}"
+        )
+    
+        with open(tmp_path, 'rb') as f:
+            files = {
+                'dataset_file': (os.path.basename(tmp_path), f, 'text/csv')
+            }
+            payload = {
+                'dataset_exists': dataset_exists,
+                'dataset_id': dataset_id,
+                'dataset_title': dataset_title,
+                'dataset_upload_mode': dataset_upload_mode,
+                'dataset_type': dataset_type,
+            }
+    
+            try:
+                upload_resp = self._sesh.post(
+                    upload_url,
+                    data=payload,
+                    files=files,
+                    cookies=self._sesh.cookies,
+                    headers=headers
+                )
+                upload_resp.raise_for_status()
+            finally:
+                os.remove(tmp_path)
+    
+        return {
+            
+            'response': upload_resp.json()
+        }
