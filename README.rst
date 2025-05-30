@@ -186,7 +186,7 @@ Methods:
   -  **append** *(bool)*: If True, appends data; otherwise replaces the dataset
   -  **fill** *(bool)*: If True, allows mismatched columns in append mode
 
-  *Returns:* JSON resonse message from server
+  *Returns:* JSON response message from server
 
 
 Use Cases
