@@ -728,12 +728,12 @@ class SurveyCTOObject(object):
         
         return response.json()['forms']
 
-    def upload_dataset(self, data, dataset_id, dataset_title=None, append=False, fill=False):
+    def upload_dataset(self, df, dataset_id, dataset_title=None, append=False, fill=False):
         """
         Uploads a pandas df to a dataset
         :return: dictionary with previous dataset preview and upload response
 
-        :param data: pandas DataFrame to upload
+        :param df: pandas DataFrame to upload
         :param dataset_id: ID of the dataset on SurveyCTO
         :param dataset_title: Optional title for the dataset (defaults to dataset_id)
         :param append: If True, appends data; otherwise replaces the dataset
@@ -741,7 +741,7 @@ class SurveyCTOObject(object):
         
         """
         
-        assert isinstance(data, pd.DataFrame), "data must be a pandas DataFrame"
+        assert isinstance(df, pd.DataFrame), "data must be a pandas DataFrame"
         assert isinstance(dataset_id, str), "dataset_id must be a string"
         if dataset_title is None:
             dataset_title = dataset_id
@@ -758,12 +758,12 @@ class SurveyCTOObject(object):
         dataset_type = 'SERVER'
     
         with tempfile.NamedTemporaryFile(suffix=".csv", delete=False, mode='w', newline='') as tmp:
-            data.to_csv(tmp.name, index=False)
+            df.to_csv(tmp.name, index=False)
             tmp_path = tmp.name
     
         upload_url = (
             f"https://{self.server_name}.surveycto.com/"
-            f"datasets/{dataset_id}/upload?csrf_token={headers["X-csrf-token"]}"
+            f'datasets/{dataset_id}/upload?csrf_token=' + '{headers[' + 'X-csrf-token' + ']}'
         )
     
         with open(tmp_path, 'rb') as f:
