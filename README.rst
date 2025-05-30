@@ -172,6 +172,22 @@ Methods:
 
   *Returns:* list of dictionaries, each dictionary containing information for each form on server   
 
+-
+  .. code:: python
+  
+   upload_dataset()
+  
+  Upload a pandas df to a dataset
+
+  *Parameters:*
+  -  **df** *(pd.DataFrame)*: pandas DataFrame to upload
+  -  **dataset_id** *(str)*: ID of the dataset on SurveyCTO
+  -  **dataset_title** *(str)*: Optional title for the dataset (defaults to dataset_id)
+  -  **append** *(bool)*: If True, appends data; otherwise replaces the dataset
+  -  **fill** *(bool)*: If True, allows mismatched columns in append mode
+
+  *Returns:* JSON resonse message from server
+
 
 Use Cases
 =========
